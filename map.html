@@ -8,6 +8,7 @@
     <style>
         html,
         body {
+            background-color: dimgrey;
             margin: 0;
             padding: 0;
             height: 100%;
@@ -35,27 +36,28 @@
 
 <body>
     <header class="header">
-        <div style="position: absolute; left: 10px;">
-            <p >침수지도</p>
+        <div>
+            <img src="C:/Temp/부산광역시.png" width="15%;" height="112;" style="position: absolute; left: 0px;">
+            <p style="display: inline; position: absolute; top:0px; left: 16%; color: white; font-size: 100%; font: bold; font-style: italic;">부산광역시 침수지도</p>
         </div>
     </header>
     <nav class="nav">
         <div style="width: 100%; height: 100%;">
             <fieldset>
-                <legend>침수심 설정</legend>
-                <input type="text" id = 'a' placeholder="파고 입력 예 : 100">
+                <legend style="color: white;">침수심 설정</legend>
+                <input type="text" id='a' placeholder="파고 입력 예 : 100">
                 <input type="button" value="적용" onclick="clac()"><br>
                 <script>
-                    function clac(){
+                    function clac() {
                         var text = document.getElementById('a').value;
-                        var num = parseInt(text,10);
+                        var num = parseInt(text, 10);
                         var result = num - 10;
-                        
+
                         document.getElementById("result").innerText = result;
                         //10은 해발고도로 변경
                     }
                 </script>
-                <p>침수심 : <span id="result"></span></p>
+                <p style="color: white;">침수심 : <span id="result" style="color: white;"></span></p>
                 <p style="font-size: 5px; color: red;">
                     침수심이란?
                 </p>
@@ -66,26 +68,54 @@
             </fieldset>
             <br>
             <fieldset>
-                <legend>침수심 표시 지역 설정</legend>
+                <legend style="color: white;">침수심 표시 지역 설정</legend>
                 <details>
-                    <summary>부산시 남구</summary>
+                    <summary style="color: white;">부산시 남구</summary>
                     <form>
                         <select id="areaSelect" onchange="showSelectedArea()">
                             <option value="">지역 선택</option>
                             <option value="daeyeon1">부산광역시 대연 1동</option>
-                            <option value="daeyeon2">부산광역시 대연 2동</option>
+                            <option value="daeyeon2">부산광역시 대연 3동</option>
+                            <option value="nam_gu">부산광역시 남구</option>
                         </select>
                     </form>
                 </details>
             </fieldset>
+        </div>
+        <div>
+            <p id='demo'></p>
         </div>
     </nav>
     <section class="section">
         <div id="map" style="width:100%;height:100%;"></div>
         <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=d5f0d7bf9887a182c9f4e0ef98619ac3"></script>
         <script type="text/javascript">
-            var city = get('C:/Users/tjwjd/.vscode/web/web-programing/web-programing/TL_SCCO_CTPRVN.json');
-            console.log(city);
+            // JSON 파일을 가져오기 위한 AJAX 요청을 생성합니다.
+            var xhr = new XMLHttpRequest();
+            xhr.overrideMimeType("application/json");
+            xhr.open('GET', 'https://github.com/dmridmrir/web-programing/blob/main/TL_SCCO_SIG.json', true);
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    json = JSON.parse(xhr.responseText);
+                    const key1 = "geometry";
+                    conam_gu = new Array();
+                    conam_gu[0] = json.features[key1].coordinates[0];
+                    conam_gu[1] = json.features[key1].coordinates[1];
+                    conam_gu[2] = json.features[key1].coordinates[2];
+                    conam_gu[3] = json.features[key1].coordinates[3];
+                    conam_gu[4] = json.features[key1].coordinates[4];
+                    conam_gu[5] = json.features[key1].coordinates[5];
+                    conam_gu[6] = json.features[key1].coordinates[6];
+                    conam_gu[7] = json.features[key1].coordinates[7];
+                    conam_gu[8] = json.features[key1].coordinates[8];
+                    conam_gu[9] = json.features[key1].coordinates[9];
+                }
+
+            };
+
+            xhr.send();
+
         </script>
         <script>
             var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
@@ -100,17 +130,15 @@
 
             var polygonPositions = {
                 daeyeon1: [
-                    new kakao.maps.LatLng(35.135750, 129.100869),
-                    new kakao.maps.LatLng(35.133664, 129.105280),
-                    new kakao.maps.LatLng(35.131578, 129.104699),
-                    new kakao.maps.LatLng(35.131726, 129.100498)
-                ],
+                    new kakao.maps.LatLng(35.139289, 129.101165),
+                    new kakao.maps.LatLng(35.138411, 129.105232),
+                    new kakao.maps.LatLng(35.135326, 129.105010),
+                    new kakao.maps.LatLng(35.134274, 129.100523)],
                 daeyeon2: [
                     new kakao.maps.LatLng(35.139289, 129.101165),
                     new kakao.maps.LatLng(35.138411, 129.105232),
                     new kakao.maps.LatLng(35.135326, 129.105010),
-                    new kakao.maps.LatLng(35.134274, 129.100523)
-                ]
+                    new kakao.maps.LatLng(35.134274, 129.100523)]
             }
             function showSelectedArea() {
                 // 이전에 표시된 다각형 제거
