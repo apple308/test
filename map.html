@@ -122,6 +122,7 @@
             float: left;
         }
     </style>
+
 </head>
 
 <body>
@@ -137,16 +138,38 @@
         <div style="width: 100%; height: 100%;">
             <fieldset>
                 <legend>침수심 설정</legend>
-                <input type="text" id='a' placeholder="파고 입력 예 : 100" style="width: 70%;">
+                <input type="text" id='a' placeholder="날짜 입력 예 : 20230101" style="width: 70%;">
                 <input type="button" value="적용" onclick="clac()"><br>
                 <script>
                     function clac() {
                         var text = document.getElementById('a').value;
                         var num = parseInt(text, 10);
-                        var result = num - 10;
+                        var today_SH;
+                        var result;
 
-                        document.getElementById("result").innerText = result;
-                        //10은 해발고도로 변경
+                        const url = `http://www.khoa.go.kr/api/oceangrid/obsWaveHight/search.do?ServiceKey=5tVR/z4TZ/nJVtHd5kYLSw==&ObsCode=TW_0062&Date=${num}&ResultType=json`
+
+                        fetch(url)
+                            .then((res) => res.json())
+                            .then((resJson) => {
+                                var SH = [];
+                                let SH_Max;
+                                console.log(resJson.result);
+
+                                for (var i = 0; i < 336; i++) {
+                                    SH[i] = resJson.result.data[i].wave_height;
+                                    if (i == 0) {
+                                        SH_Max = SH[0];
+                                    } else if (SH_Max < SH[i]) {
+                                        SH_Max = SH[i];
+                                    }
+                                }
+                                today_SH = parseFloat(SH_Max, 10);
+                                result = today_SH - 10
+                                console.log(result);
+                                document.getElementById("result").innerText = result;
+                            });
+
                     }
                 </script>
                 <p style>침수심 : <span id="result"></span></p>
