@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>웹프로젝트 프로젝트</title>
+    <link href="css/wwp.css" rel="stylesheet">
+</head>
+<body>
+    
+    <div class="container">
+        <header class="header">
+			<ul class="header_menu">
+                <li class="header_menu_list">menu1</li>
+                <li class="header_menu_list">menu2</li>
+                <li class="header_menu_list">menu3</li>
+            </ul>
+        </header>
+        
+        <main class="main">
+            <img class="logo" src="logo7.png">
+            <div class="main_menu1">
+				<div class="main_menu1_date">
+				  <label class="date_caption">침수 날짜 입력 :</label>
+				  <input type="date" class="date-input">
+				</div>
+				<div class="main_menu1_location">
+					<label class="location_caption">침수 지역 입력 :</label>
+					  <select class="select-input">
+						<option value="1">부산 남구</option>
+						<option value="2">부산 해운대구</option>
+						<option value="3">부산 동구</option>
+					  </select>
+				</div>
+				<div class="main_menu1_detail">
+				  <div class="summary" onclick="toggleDetails()">침수심이란?</div>
+				  <div class="details" style="display: none;">
+					100년 빈도의 강우량을 가정한 가상 홍수 피해 수심을 나타내는 말로 (파고 - 현재 지역의 해발고도)로 나타냄
+				  </div>
+				</div>
+			</div>
+			<div class="main_menu2">
+				<div class="main_menu2_buttons"><img src="marker.png" class="mina_menu2_buttons_logo">현재 위치 표시</div>
+				<div class="main_menu2_buttons"><img src="home.png" class="mina_menu2_buttons_logo">대피소 표시</div>
+				<div class="main_menu2_buttons"><img src="remove.png" class="mina_menu2_buttons_logo">마커 제거</div>
+			
+			</div>
+        </main>
+		
+        <div id="map" class="map">map</div>
+     </div>
+    
+	<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e7974cd48c42f84889afa859a895582b"></script>
+    
+	<script>
+		var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+		    mapOption = {
+		        center: new kakao.maps.LatLng(37.56628, 126.98041), // 지도의 중심좌표
+		        level: 3, // 지도의 확대 레벨
+		        mapTypeId : kakao.maps.MapTypeId.ROADMAP // 지도종류
+		    }; 
+
+		// 지도를 생성한다 
+		var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+		// 지도에 마커를 생성하고 표시한다
+		var marker = new kakao.maps.Marker({
+		    position: new kakao.maps.LatLng(37.56628, 126.98041), // 마커의 좌표
+		    map: map // 마커를 표시할 지도 객체
+		});
+		
+		//침수심 세부설명 토글
+        function toggleDetails() {
+		var details = document.querySelector('.main_menu1_detail .details');
+		details.style.display = (details.style.display === 'none') ? 'block' : 'none';
+		}
+      </script>
+	</body>
+</html>
