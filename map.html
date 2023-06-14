@@ -13,6 +13,16 @@
             height: 100%;
         }
 
+        .overlaybox {
+            position: relative;
+            display: inline-block;
+            background: #284a6e no-repeat;
+            padding: 10px;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+
         .map_wrap {
             position: relative;
             overflow: hidden;
@@ -217,13 +227,18 @@
                         src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소"></span>
             </div>
             <script type="text/javascript"
+<<<<<<< Updated upstream
                 src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=d5f0d7bf9887a182c9f4e0ef98619ac3"></script>
+=======
+                src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e1c41ea5a19c26dc62e448d5184b0f1d&libraries=clusterer,services"></script>
+>>>>>>> Stashed changes
             <script>
                 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
                     mapOption = {
                         center: new kakao.maps.LatLng(35.134080249513474, 129.10317348438963), // 지도의 중심좌표
                         level: 6, // 지도의 확대 레벨
                         mapTypeId: kakao.maps.MapTypeId.ROADMAP // 지도종류
+
                     };
                 // 지도를 생성한다
                 var map = new kakao.maps.Map(mapContainer, mapOption);
@@ -305,6 +320,55 @@
             </script>
         </div>
     </section>
+
+    <script src="./test.json" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=d5f0d7bf9887a182c9f4e0ef98619ac3&libraries=services,clusterer"></script>
+    <script type="text/javascript">
+        let json = JSON.parse(JSON.stringify(data));
+
+        let jsonData = JSON.parse(json);
+        let wtmX, wtmY;
+        //console.log(jsonData.features[0].geometry);
+        for (j = 0; j < jsonData.features[0].geometry.coordinates.length; j++) {
+
+            wtmX = 0, wtmY = 0;
+            let tempdiv = jsonData.features[0].geometry.coordinates[j][0].length;
+            for (i = 0; i < jsonData.features[0].geometry.coordinates[j][0].length; i++) {
+
+                var geocoder = new kakao.maps.services.Geocoder(),
+
+                    X = jsonData.features[0].geometry.coordinates[0][0][i][0],
+                    Y = jsonData.features[0].geometry.coordinates[0][0][i][1];
+
+                wtmX += X / tempdiv;
+                wtmY += Y / tempdiv;
+
+            }
+
+            // WTM 좌표를 WGS84 좌표계의 좌표로 변환합니다
+            geocoder.transCoord(wtmX, wtmY, transCoordCB, {
+                input_coord: kakao.maps.services.Coords.WTM, // 변환을 위해 입력한 좌표계 입니다
+                output_coord: kakao.maps.services.Coords.WGS84 // 변환 결과로 받을 좌표계 입니다 
+            });
+
+            // 좌표 변환 결과를 받아서 처리할 콜백함수 입니다.
+            function transCoordCB(result, status) {
+
+                // 정상적으로 검색이 완료됐으면 
+                if (status === kakao.maps.services.Status.OK) {
+
+                    // 마커를 변환된 위치에 표시합니다
+                    var marker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(result[0].y, result[0].x), // 마커를 표시할 위치입니다
+                        map: map // 마커를 표시할 지도객체입니다
+                    })
+                }
+
+            }
+        }
+    </script>
 </body>
 
 </html>
