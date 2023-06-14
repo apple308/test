@@ -1,0 +1,186 @@
+
+@import url(//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSansNeo.css);
+
+.container {
+	width: 100vw;
+	height: 100vh;
+  
+}
+
+
+.map {
+    width:75%; 
+    height:94%; 
+    float:left; 
+    margin: 0px;
+}
+
+
+
+.header {
+    width: 100%;
+    height: 6%;
+    margin: 1xp;
+    background-color: #5BC0F8;
+    color: white;
+	font-weight: bold;
+    display: flex;
+    box-shadow: 0px -7px 0px 0px #77d6f0 inset;
+  
+   
+}
+
+.main {
+    background-color: #86E5FF;
+    width:25%;
+    height:94%;
+    float:left;
+    color: #5BC0F8;
+	font-weight: bold;
+    
+}
+
+
+
+.header_menu {
+ list-style-type: none;
+ display: flex;
+ align-items: center;
+ margin-bottom: 1.5%
+
+
+}
+
+
+.logo {
+    
+    border-radius: 10px 10px 10px 10px;
+    padding: 20px;
+    width: 80%;
+	height: 15%;
+    margin-left: 5%;
+    margin-top: 3%;
+	background-color: #5BC0F8;
+   
+
+	
+}
+
+.header_menu_list {
+    background-color: #0081C9;
+    margin-right: 45px;
+    font-size: 17px;
+    border-radius: 20px 20px 20px 20px;
+    padding: 3%;
+    
+}
+
+
+.header_menu_list:hover{background-color: #233E8B;}
+
+
+.main_menu1 {
+    background-color: white;
+    border-radius: 10px 10px 10px 10px;
+    padding: 10px;
+    width: 85%;
+	height: 22%;
+    margin-left: 5%;
+    margin-top: 5%;
+}
+
+.main_menu2 {
+	background-color: white;
+    border-radius: 10px 10px 10px 10px;
+    padding: 10px;
+    width: 85%;
+	height: 9%;
+    margin-left: 5%;
+    margin-top: 5%;
+}
+
+.main_menu2_buttons {
+	width: 33%;
+	height: 100%;
+	float: left;
+	text-align: center;
+	color: #5BC0F8;
+}
+
+.date_caption {
+  margin-bottom: 5px;
+  margin-right: 15px;
+}
+
+.main_menu1_date {
+	width: 95%;
+  border: 1px solid lightgray;
+  border-radius: 10px 10px 10px 10px;
+  padding: 10px;
+  display: inline-block;
+  margin-bottom:10px; 
+}
+
+.date-input {
+	width: 200px;
+  padding: 5px;
+  border: 1px solid lightgray;
+  border-radius: 4px;
+}
+
+body {
+ margin: 0;
+ font-family: 'Spoqa Han Sans Neo', 'sans-serif';
+}
+
+.main_menu1_location{
+	width: 95%;
+	border-radius: 10px 10px 10px 10px;
+	border: 1px solid lightgray;
+  padding: 10px;
+	display: block;
+}
+
+.location_caption {
+  margin-bottom: 5px;
+  margin-right: 15px;
+}
+
+.select-input {
+  width: 200px;
+  padding: 5px;
+  border: 1px solid lightgray;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+.main_menu1_detail {
+	margin-top: 15px;
+	margin-left: 10px;
+}
+
+.mina_menu2_buttons_logo {
+	width: 30px; height: 30px; display: block;
+	margin-left: 40px;
+	margin-bottom: 12px;
+	margin-top: 10px;
+}
+.mina_menu2_buttons_logo:hover{
+	width: 32px;
+	height: 32px;
+}
+
+.summary {
+	cursor: pointer;
+}
+
+.summary:hover{
+	color: #0081C9;
+}
+
+.details {
+	margin-top: 10px;
+	font-weight: normal;
+	font-size: 5px;
+	color: gray;
+}
