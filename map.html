@@ -5,14 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>침수지도</title>
+	<link href="css/wwp.css" rel="stylesheet">
     <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
         .map_wrap {
             position: relative;
             overflow: hidden;
@@ -104,39 +98,25 @@
             border-bottom: 1px solid #bfbfbf;
         }
 
-        .header {
-            width: 100%;
-            height: 15%;
-            font-size: 30px;
-        }
-
-        .nav {
-            width: 15%;
-            height: 85%;
-            float: left;
-        }
-
-        .section {
-            width: 85%;
-            height: 85%;
-            float: left;
-        }
     </style>
-
 </head>
 
 <body>
-    <header class="header">
-        <div>
-            <img src="C:/Temp/부산광역시.png" width="15%;" height="112;" style="position: absolute; left: 0px;">
-            <p
-                style="display: inline; position: absolute; top:0px; left: 16%; font-size: 100%; font: bold; font-style: initial; font: bolder;">
-                부산광역시 침수지도</p>
-        </div>
-    </header>
-    <nav class="nav">
-        <div style="width: 100%; height: 100%;">
-            <fieldset>
+    <div class="container">
+        <header class="header">
+			<ul class="header_menu">
+                <li class="header_menu_list">
+            		<a href="https://www.weather.go.kr/w/index.do#dong/2629053000" target="_blank"> 기상청 방문</a></li>
+                <li class="header_menu_list">menu2</li>
+                <li class="header_menu_list">menu3</li>
+            </ul>
+        </header>
+		
+         <main class="main">
+            <img class="logo" src="logo7.png">
+            <div class="main_menu1">
+				<div class="main_menu1_date">
+            	<fieldset>
                 <legend>침수심 설정</legend>
                 <input type="text" id='a' placeholder="날짜 입력 예 : 20230101" style="width: 70%;">
                 <input type="button" value="적용" onclick="clac()"><br>
@@ -172,44 +152,40 @@
 
                     }
                 </script>
-                <p style>침수심 : <span id="result"></span></p>
-                <p style="font-size: 5px; color: red;">
-                    침수심이란?
-                </p>
-                <P style="font-size: 5px; color:  red;">
-                    100년 빈도의 강우량을 가정한 가상 홍수 피해 수심을 나타내는 말로
-                    (파고 - 현재 지역의 해발고도)로 나타냄
-                </P>
             </fieldset>
-            <br>
-            <fieldset>
-                <legend>침수심 표시 지역 설정</legend>
-                <details>
-                    <form>
-                        <select id="areaSelect" onchange="showSelectedArea()">
-                            <option value="">지역 선택</option>
-                            <option value="daeyeon1">부산광역시 대연 1동</option>
-                            <option value="daeyeon2">부산광역시 대연 3동</option>
-                            <option value="nam_gu">부산광역시 남구</option>
-                        </select>
-                    </form>
-                </details>
-            </fieldset>
-            <br>
-            <fieldset>
-                <legend>현재 위치</legend>
-                <input type="button" value="현재위치" onclick="getlocation()">
-                <input type="button" value="끄기" onclick="GeohideMarkers()"><br>
-                <input type="checkbox" value="주차장" onclick="Parkingcheck(this)">주차장
-                <input type="checkbox" value="대피소" onclick="DaePicheck(this)">대피소
-            </fieldset>
-        </div>
-        <div style="position: fixed; bottom: 0; left: 0;">
-            <p style="font-size: 20px;">바로가기 사이트</p>
-            <p style="font-size: 20px;"><img src="C:/Temp/기상청.png" width="25px" height="25px"><a
-                    href="https://www.weather.go.kr/w/index.do#dong/2629053000" target="_blank">기상청</a></p>
-        </div>
-    </nav>
+		 		</div>			
+				<div class="main_menu1_location">
+				<fieldset>
+					<legend>예상 강우량 설정</legend>
+					<details>
+						<form>
+							<select id="areaSelect" onchange="Rain()">
+								<option value="">강우량 선택</option>
+								<option value="0_50">0~50mm</option>
+								<option value="50_100">50~100mm</option>
+								<option value="100_">100mm이상</option>
+							</select>
+						</form>
+					</details>
+				</fieldset>
+				</div>		
+            	<div class="main_menu1_detail">
+				  <div class="summary" onclick="toggleDetails()">침수심이란?</div>
+				  <div class="details" style="display: none;">
+					100년 빈도의 강우량을 가정한 가상 홍수 피해 수심을 나타내는 말로 (파고 - 현재 지역의 해발고도)로 나타냄
+				  </div>
+				</div>
+			</div>
+			<div class="main_menu2">
+				<div class="main_menu2_buttons"><img src="marker.png" class="mina_menu2_buttons_logo" onclick="getlocation()">현재 위치</div>
+				<div class="main_menu2_buttons"><img src="remove.png" class="mina_menu2_buttons_logo" onclick="GeohideMarkers()" >위치 제거</div>
+				<div class="main_menu2_buttons"><img src="home.png" class="mina_menu2_buttons_logo" onclick="DaePicheck(this)">대피소</div>
+				<div class="main_menu2_buttons"><img src="remove.png" class="mina_menu2_buttons_logo" onclick="Parkingcheck(this)" >주차장</div>
+			</div>
+        </main>
+		
+    
+   
     <section class="section">
         <div class="map_wrap">
             <div id="map" style="width:100%;height:100%;"></div>
@@ -225,7 +201,7 @@
                         src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소"></span>
             </div>
             <script type="text/javascript"
-                src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e1c41ea5a19c26dc62e448d5184b0f1d&libraries=clusterer"></script>
+                src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e7974cd48c42f84889afa859a895582b&libraries=clusterer"></script>
             <script>
                 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
                     mapOption = {
@@ -235,6 +211,148 @@
                     };
                 // 지도를 생성한다
                 var map = new kakao.maps.Map(mapContainer, mapOption);
+
+                areas = [];
+
+                async function Rain(aera) {
+                    try {
+                        const response1 = await fetch('filtered_emd.geojson');
+                        const data1 = await response1.json();
+
+                        console.log(data1);
+
+                        var urselect = document.getElementById('areaSelect');
+
+                        var region = {};
+
+                        if (urselect.value == '0_50') {
+                            console.log('1');
+                            for (var i = 0; i < areas.length; i++) {
+                                if (areas[i].name == '명지동') {
+                                    region = areas[i].path;
+                                    polygon = new kakao.maps.Polygon({
+                                        map: map, // 다각형을 표시할 지도 객체
+                                        path: region,
+                                        strokeWeight: 2,
+                                        strokeColor: '#ff4c80',
+                                        strokeOpacity: 0.8,
+                                        fillColor: '#fff',
+                                        fillOpacity: 0.7
+                                    });
+                                }
+                            }
+                        } else if (urselect.value == '50_100') {
+                            console.log('2');
+                        } else {
+                            console.log('3');
+                        }
+
+                    } catch (error) {
+                        console.log(error);
+                    }
+
+                }
+
+                // 로컬 폴더에서 filtered_emd.geojson 파일을 불러옵니다
+                fetch('filtered_emd.geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+
+                        features = data.features;
+
+                        // 각 feature를 순회하면서 areas 배열에 추가합니다
+                        for (var i = 0; i < features.length; i++) {
+                            feature = features[i];
+                            name = feature.properties.EMD_KOR_NM;
+                            coordinates = feature.geometry.coordinates;
+
+                            // 다각형의 형태에 따라 처리합니다
+                            if (feature.geometry.type === 'Polygon') {
+                                path = coordinates[0].map(function (coord) {
+                                    return new kakao.maps.LatLng(coord[1], coord[0]);
+                                });
+
+                                this.areas.push({
+                                    name: name,
+                                    path: path
+                                });
+                            } else if (feature.geometry.type === 'MultiPolygon') {
+                                for (var j = 0; j < coordinates.length; j++) {
+                                    path = coordinates[j][0].map(function (coord) {
+                                        return new kakao.maps.LatLng(coord[1], coord[0]);
+                                    });
+
+                                    areas.push({
+                                        name: name,
+                                        path: path
+                                    });
+                                }
+                            }
+                        }
+
+                        var customOverlay = new kakao.maps.CustomOverlay({});
+                        var infowindow = new kakao.maps.InfoWindow({ removable: true });
+
+                        // 지도에 영역데이터를 폴리곤으로 표시합니다 
+                        for (var i = 0, len = areas.length; i < len; i++) {
+                            displayArea(areas[i]);
+                        }
+
+                        // 다각형을 생성하고 이벤트를 등록하는 함수입니다
+                        function displayArea(area) {
+                            polygon = new kakao.maps.Polygon({
+                                map: map, // 다각형을 표시할 지도 객체
+                                path: area.path,
+                                strokeWeight: 2,
+                                strokeColor: '#004c80',
+                                strokeOpacity: 0.8,
+                                fillColor: '#fff',
+                                fillOpacity: 0.7
+                            });
+
+                            // 다각형을 생성합니다 
+
+
+                            // 다각형에 mouseover 이벤트를 등록하고 이벤트가 발생하면 폴리곤의 채움색을 변경합니다 
+                            // 지역명을 표시하는 커스텀오버레이를 지도위에 표시합니다
+                            kakao.maps.event.addListener(polygon, 'mouseover', function (mouseEvent) {
+                                polygon.setOptions({ fillColor: '#09f' });
+
+                                customOverlay.setContent('<div class="area">' + area.name + '</div>');
+
+                                customOverlay.setPosition(mouseEvent.latLng);
+                                customOverlay.setMap(map);
+                            });
+
+                            // 다각형에 mousemove 이벤트를 등록하고 이벤트가 발생하면 커스텀 오버레이의 위치를 변경합니다 
+                            kakao.maps.event.addListener(polygon, 'mousemove', function (mouseEvent) {
+
+                                customOverlay.setPosition(mouseEvent.latLng);
+                            });
+
+                            // 다각형에 mouseout 이벤트를 등록하고 이벤트가 발생하면 폴리곤의 채움색을 원래색으로 변경합니다
+                            // 커스텀 오버레이를 지도에서 제거합니다 
+                            kakao.maps.event.addListener(polygon, 'mouseout', function () {
+                                polygon.setOptions({ fillColor: '#fff' });
+                                customOverlay.setMap(null);
+                            });
+
+                            // 다각형에 click 이벤트를 등록하고 이벤트가 발생하면 다각형의 이름과 면적을 인포윈도우에 표시합니다 
+                            kakao.maps.event.addListener(polygon, 'click', function (mouseEvent) {
+                                var content = '<div class="info">' +
+                                    '   <div class="title">' + area.name + '</div>' +
+                                    '   <div class="size">총 면적 : 약 ' + Math.floor(polygon.getArea()) + ' m<sup>2</sup></div>' +
+                                    '</div>';
+
+                                infowindow.setContent(content);
+                                infowindow.setPosition(mouseEvent.latLng);
+                                infowindow.setMap(map);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('파일 로드 실패:', error));
+
                 function setMapType(maptype) {
                     var roadmapControl = document.getElementById('btnRoadmap');
                     var skyviewControl = document.getElementById('btnSkyview');
@@ -258,48 +376,6 @@
                 function zoomOut() {
                     map.setLevel(map.getLevel() + 1);
                 }
-                var polygons = [];
-
-                var polygonPositions = {
-                    daeyeon1: [
-                        new kakao.maps.LatLng(35.139289, 129.101165),
-                        new kakao.maps.LatLng(35.138411, 129.105232),
-                        new kakao.maps.LatLng(35.135326, 129.105010),
-                        new kakao.maps.LatLng(35.134274, 129.100523)],
-                    daeyeon2: [
-                        new kakao.maps.LatLng(35.139289, 129.101165),
-                        new kakao.maps.LatLng(35.138411, 129.105232),
-                        new kakao.maps.LatLng(35.135326, 129.105010),
-                        new kakao.maps.LatLng(35.134274, 129.100523)]
-                }
-                function showSelectedArea() {
-                    // 이전에 표시된 다각형 제거
-                    removePolygons();
-
-                    var areaSelect = document.getElementById("areaSelect");
-                    var selectedValue = areaSelect.value;
-
-                    if (selectedValue !== "") {
-                        // 선택한 지역의 다각형 생성
-                        var selectedPolygon = new kakao.maps.Polygon({
-                            path: polygonPositions[selectedValue], // 선택한 지역의 좌표 배열
-                            strokeWeight: 2, // 선의 두께
-                            strokeColor: '#FF0000', // 선의 색상
-                            strokeOpacity: 0.8, // 선의 투명도
-                        });
-
-                        // 선택한 지역의 다각형 지도에 표시
-                        selectedPolygon.setMap(map);
-
-                        // 생성된 다각형을 배열에 추가
-                        polygons.push(selectedPolygon);
-
-                        // 선택한 지역으로 지도 중심 좌표 변경
-                        map.setCenter(new kakao.maps.LatLng(35.1375, 129.103));
-                    }
-                }
-
-                // 이전에 표시된 다각형 제거
                 function removePolygons() {
                     if (polygons.length > 0) {
                         for (var i = 0; i < polygons.length; i++) {
@@ -464,20 +540,27 @@
                 }
 
                 //대피소 체크박스 체크, 해제
-                function DaePicheck(box) {
-                    if (box.checked == true)
-                        showMarkers();
-                    else
-                        hideMarkers();
-                }
-                //주차장 체크박스 체크, 해제
-                function Parkingcheck(box) {
-                    if (box.checked == true)
-                        Parking_showMarkers();
-                    else
-                        Parking_hideMarkers();
-                }
+                let markersShown = false;
 
+				function DaePicheck() {
+					if (markersShown) {
+						hideMarkers();
+					} else {
+						showMarkers();
+					}
+					markersShown = !markersShown;
+				}
+                //주차장 체크박스 체크, 해제
+                let parkingChecked = false;
+
+				function Parkingcheck() {
+					if (parkingChecked) {
+						Parking_hideMarkers();
+					} else {
+						Parking_showMarkers();
+					}
+					parkingChecked = !parkingChecked;
+				}
                 hideMarkers(); // 처음 지우기
 
                 //주차장 마커 표시
@@ -2014,6 +2097,11 @@
                     Parking_setMarkers(null);
                     clusterer.clear();
                 }
+					//침수심 세부설명 토글
+        function toggleDetails() {
+		var details = document.querySelector('.main_menu1_detail .details');
+		details.style.display = (details.style.display === 'none') ? 'block' : 'none';
+		}
                 //처음 지우기
                 Parking_hideMarkers();
             </script>
