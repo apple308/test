@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>침수지도</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .map_wrap {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        .radius_border {
+            border: 1px solid #919191;
+            border-radius: 5px;
+        }
+
+        .custom_typecontrol {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            overflow: hidden;
+            width: 130px;
+            height: 30px;
+            margin: 0;
+            padding: 0;
+            z-index: 1;
+            font-size: 12px;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        }
+
+        .custom_typecontrol span {
+            display: block;
+            width: 65px;
+            height: 30px;
+            float: left;
+            text-align: center;
+            line-height: 30px;
+            cursor: pointer;
+        }
+
+        .custom_typecontrol .btn {
+            background: #fff;
+            background: linear-gradient(#fff, #e6e6e6);
+        }
+
+        .custom_typecontrol .btn:hover {
+            background: #f5f5f5;
+            background: linear-gradient(#f5f5f5, #e3e3e3);
+        }
+
+        .custom_typecontrol .btn:active {
+            background: #e6e6e6;
+            background: linear-gradient(#e6e6e6, #fff);
+        }
+
+        .custom_typecontrol .selected_btn {
+            color: #fff;
+            background: #425470;
+            background: linear-gradient(#425470, #5b6d8a);
+        }
+
+        .custom_typecontrol .selected_btn:hover {
+            color: #fff;
+        }
+
+        .custom_zoomcontrol {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            width: 36px;
+            height: 80px;
+            overflow: hidden;
+            z-index: 1;
+            background-color: #f5f5f5;
+        }
+
+        .custom_zoomcontrol span {
+            display: block;
+            width: 36px;
+            height: 40px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .custom_zoomcontrol span img {
+            width: 15px;
+            height: 15px;
+            padding: 12px 0;
+            border: none;
+        }
+
+        .custom_zoomcontrol span:first-child {
+            border-bottom: 1px solid #bfbfbf;
+        }
+
+        .header {
+            width: 100%;
+            height: 15%;
+            font-size: 30px;
+        }
+
+        .nav {
+            width: 15%;
+            height: 85%;
+            float: left;
+        }
+
+        .section {
+            width: 85%;
+            height: 85%;
+            float: left;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div>
+            <img src="C:/Temp/부산광역시.png" width="15%;" height="112;" style="position: absolute; left: 0px;">
+            <p
+                style="display: inline; position: absolute; top:0px; left: 16%; font-size: 100%; font: bold; font-style: initial; font: bolder;">
+                부산광역시 침수지도</p>
+        </div>
+    </header>
+    <nav class="nav">
+        <div style="width: 100%; height: 100%;">
+            <fieldset>
+                <legend>침수심 설정</legend>
+                <input type="text" id='a' placeholder="날짜 입력 예 : 20230101" style="width: 70%;">
+                <input type="button" value="적용" onclick="clac()"><br>
+                <script>
+                    function clac() {
+                        var text = document.getElementById('a').value;
+                        var num = parseInt(text, 10);
+                        var today_SH;
+                        var result;
+
+                        const url = `http://www.khoa.go.kr/api/oceangrid/obsWaveHight/search.do?ServiceKey=5tVR/z4TZ/nJVtHd5kYLSw==&ObsCode=TW_0062&Date=${num}&ResultType=json`
+
+                        fetch(url)
+                            .then((res) => res.json())
+                            .then((resJson) => {
+                                var SH = [];
+                                let SH_Max;
+                                console.log(resJson.result);
+
+                                for (var i = 0; i < 336; i++) {
+                                    SH[i] = resJson.result.data[i].wave_height;
+                                    if (i == 0) {
+                                        SH_Max = SH[0];
+                                    } else if (SH_Max < SH[i]) {
+                                        SH_Max = SH[i];
+                                    }
+                                }
+                                today_SH = parseFloat(SH_Max, 10);
+                                result = today_SH - 10
+                                console.log(result);
+                                document.getElementById("result").innerText = result;
+                            });
+
+                    }
+                </script>
+                <p style>침수심 : <span id="result"></span></p>
+                <p style="font-size: 5px; color: red;">
+                    침수심이란?
+                </p>
+                <P style="font-size: 5px; color:  red;">
+                    100년 빈도의 강우량을 가정한 가상 홍수 피해 수심을 나타내는 말로
+                    (파고 - 현재 지역의 해발고도)로 나타냄
+                </P>
+            </fieldset>
+            <br>
+            <fieldset>
+                <legend>예상 강우량 설정</legend>
+                <details>
+                    <form>
+                        <select id="areaSelect" onchange="Rain()">
+                            <option value="">강우량 선택</option>
+                            <option value="0_50">0~50mm</option>
+                            <option value="50_100">50~100mm</option>
+                            <option value="100_">100mm이상</option>
+                        </select>
+                    </form>
+                </details>
+            </fieldset>
+            <br>
+            <fieldset>
+                <legend>현재 위치</legend>
+                <input type="button" value="현재위치" onclick="getlocation()">
+                <input type="button" value="끄기" onclick="GeohideMarkers()"><br>
+                <input type="checkbox" value="주차장" onclick="Parkingcheck(this)">주차장
+                <input type="checkbox" value="대피소" onclick="DaePicheck(this)">대피소
+            </fieldset>
+        </div>
+        <div style="position: fixed; bottom: 0; left: 0;">
+            <p style="font-size: 20px;">바로가기 사이트</p>
+            <p style="font-size: 20px;"><img src="C:/Temp/기상청.png" width="25px" height="25px"><a
+                    href="https://www.weather.go.kr/w/index.do#dong/2629053000" target="_blank">기상청</a></p>
+        </div>
+    </nav>
+    <section class="section">
+        <div class="map_wrap">
+            <div id="map" style="width:100%;height:100%;"></div>
+            <div class="custom_typecontrol radius_border">
+                <span id="btnRoadmap" class="selected_btn" onclick="setMapType('roadmap')">지도</span>
+                <span id="btnSkyview" class="btn" onclick="setMapType('skyview')">스카이뷰</span>
+            </div>
+            <!-- 지도 확대, 축소 컨트롤 div 입니다 -->
+            <div class="custom_zoomcontrol radius_border">
+                <span onclick="zoomIn()"><img
+                        src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_plus.png" alt="확대"></span>
+                <span onclick="zoomOut()"><img
+                        src="https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/ico_minus.png" alt="축소"></span>
+            </div>
+            <script type="text/javascript"
+                src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=e1c41ea5a19c26dc62e448d5184b0f1d&libraries=clusterer"></script>
+            <script>
+                var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+                    mapOption = {
+                        center: new kakao.maps.LatLng(35.134080249513474, 129.10317348438963), // 지도의 중심좌표
+                        level: 6, // 지도의 확대 레벨
+                        mapTypeId: kakao.maps.MapTypeId.ROADMAP // 지도종류
+                    };
+                // 지도를 생성한다
+                var map = new kakao.maps.Map(mapContainer, mapOption);
+
+                areas = [];
+
+                async function Rain(aera) {
+                    try {
+                        const response1 = await fetch('filtered_emd.geojson');
+                        const data1 = await response1.json();
+
+                        console.log(data1);
+
+                        var urselect = document.getElementById('areaSelect');
+
+                        var region = {};
+
+                        if (urselect.value == '0_50') {
+                            console.log('1');
+                            for (var i = 0; i < areas.length; i++) {
+                                if (areas[i].name == '명지동') {
+                                    region = areas[i].path;
+                                    polygon = new kakao.maps.Polygon({
+                                        map: map, // 다각형을 표시할 지도 객체
+                                        path: region,
+                                        strokeWeight: 2,
+                                        strokeColor: '#ff4c80',
+                                        strokeOpacity: 0.8,
+                                        fillColor: '#fff',
+                                        fillOpacity: 0.7
+                                    });
+                                }
+                            }
+                        } else if (urselect.value == '50_100') {
+                            console.log('2');
+                        } else {
+                            console.log('3');
+                        }
+
+                    } catch (error) {
+                        console.log(error);
+                    }
+
+                }
+
+                // 로컬 폴더에서 filtered_emd.geojson 파일을 불러옵니다
+                fetch('filtered_emd.geojson')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+
+                        features = data.features;
+
+                        // 각 feature를 순회하면서 areas 배열에 추가합니다
+                        for (var i = 0; i < features.length; i++) {
+                            feature = features[i];
+                            name = feature.properties.EMD_KOR_NM;
+                            coordinates = feature.geometry.coordinates;
+
+                            // 다각형의 형태에 따라 처리합니다
+                            if (feature.geometry.type === 'Polygon') {
+                                path = coordinates[0].map(function (coord) {
+                                    return new kakao.maps.LatLng(coord[1], coord[0]);
+                                });
+
+                                this.areas.push({
+                                    name: name,
+                                    path: path
+                                });
+                            } else if (feature.geometry.type === 'MultiPolygon') {
+                                for (var j = 0; j < coordinates.length; j++) {
+                                    path = coordinates[j][0].map(function (coord) {
+                                        return new kakao.maps.LatLng(coord[1], coord[0]);
+                                    });
+
+                                    areas.push({
+                                        name: name,
+                                        path: path
+                                    });
+                                }
+                            }
+                        }
+
+                        var customOverlay = new kakao.maps.CustomOverlay({});
+                        var infowindow = new kakao.maps.InfoWindow({ removable: true });
+
+                        // 지도에 영역데이터를 폴리곤으로 표시합니다 
+                        for (var i = 0, len = areas.length; i < len; i++) {
+                            displayArea(areas[i]);
+                        }
+
+                        // 다각형을 생성하고 이벤트를 등록하는 함수입니다
+                        function displayArea(area) {
+                            polygon = new kakao.maps.Polygon({
+                                map: map, // 다각형을 표시할 지도 객체
+                                path: area.path,
+                                strokeWeight: 2,
+                                strokeColor: '#004c80',
+                                strokeOpacity: 0.8,
+                                fillColor: '#fff',
+                                fillOpacity: 0.7
+                            });
+
+                            // 다각형을 생성합니다 
+
+
+                            // 다각형에 mouseover 이벤트를 등록하고 이벤트가 발생하면 폴리곤의 채움색을 변경합니다 
+                            // 지역명을 표시하는 커스텀오버레이를 지도위에 표시합니다
+                            kakao.maps.event.addListener(polygon, 'mouseover', function (mouseEvent) {
+                                polygon.setOptions({ fillColor: '#09f' });
+
+                                customOverlay.setContent('<div class="area">' + area.name + '</div>');
+
+                                customOverlay.setPosition(mouseEvent.latLng);
+                                customOverlay.setMap(map);
+                            });
+
+                            // 다각형에 mousemove 이벤트를 등록하고 이벤트가 발생하면 커스텀 오버레이의 위치를 변경합니다 
+                            kakao.maps.event.addListener(polygon, 'mousemove', function (mouseEvent) {
+
+                                customOverlay.setPosition(mouseEvent.latLng);
+                            });
+
+                            // 다각형에 mouseout 이벤트를 등록하고 이벤트가 발생하면 폴리곤의 채움색을 원래색으로 변경합니다
+                            // 커스텀 오버레이를 지도에서 제거합니다 
+                            kakao.maps.event.addListener(polygon, 'mouseout', function () {
+                                polygon.setOptions({ fillColor: '#fff' });
+                                customOverlay.setMap(null);
+                            });
+
+                            // 다각형에 click 이벤트를 등록하고 이벤트가 발생하면 다각형의 이름과 면적을 인포윈도우에 표시합니다 
+                            kakao.maps.event.addListener(polygon, 'click', function (mouseEvent) {
+                                var content = '<div class="info">' +
+                                    '   <div class="title">' + area.name + '</div>' +
+                                    '   <div class="size">총 면적 : 약 ' + Math.floor(polygon.getArea()) + ' m<sup>2</sup></div>' +
+                                    '</div>';
+
+                                infowindow.setContent(content);
+                                infowindow.setPosition(mouseEvent.latLng);
+                                infowindow.setMap(map);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('파일 로드 실패:', error));
+
+                function setMapType(maptype) {
+                    var roadmapControl = document.getElementById('btnRoadmap');
+                    var skyviewControl = document.getElementById('btnSkyview');
+                    if (maptype === 'roadmap') {
+                        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP);
+                        roadmapControl.className = 'selected_btn';
+                        skyviewControl.className = 'btn';
+                    } else {
+                        map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);
+                        skyviewControl.className = 'selected_btn';
+                        roadmapControl.className = 'btn';
+                    }
+                }
+
+                // 지도 확대, 축소 컨트롤에서 확대 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+                function zoomIn() {
+                    map.setLevel(map.getLevel() - 1);
+                }
+
+                // 지도 확대, 축소 컨트롤에서 축소 버튼을 누르면 호출되어 지도를 확대하는 함수입니다
+                function zoomOut() {
+                    map.setLevel(map.getLevel() + 1);
+                }
+                function removePolygons() {
+                    if (polygons.length > 0) {
+                        for (var i = 0; i < polygons.length; i++) {
+                            polygons[i].setMap(null);
+                        }
+                        polygons = [];
+                    }
+                }
+
+
+
+                //현재위치, 주차장, 대피소 표시
+                //현재위치정보 가져오기
+                var geoMarker = [];
+                var circle;
+                function getlocation() {
+                    // HTML5의 geolocation으로 사용할 수 있는지 확인합니다 
+                    if (navigator.geolocation) {
+
+                        // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+                        navigator.geolocation.getCurrentPosition(function (position) {
+
+                            var lat = position.coords.latitude, // 위도
+                                lon = position.coords.longitude; // 경도
+
+                            var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+                                message = '<div style="padding:5px;">현재 위치</div>'; // 인포윈도우에 표시될 내용입니다
+
+                            // 마커와 인포윈도우를 표시합니다
+                            displayMarker(locPosition, message);
+                            // 지도에 표시할 원을 생성합니다
+                            circle = new kakao.maps.Circle({
+                                center: new kakao.maps.LatLng(lat, lon),  // 원의 중심좌표 입니다 
+                                radius: 1000, // 미터 단위의 원의 반지름입니다 
+                                strokeWeight: 2, // 선의 두께입니다 
+                                strokeColor: '#75B8FA', // 선의 색깔입니다
+                                strokeOpacity: 0.7, // 선의 불투명도 입니다 1에서 0 사이의 값이며 0에 가까울수록 투명합니다
+                                strokeStyle: 'dashed', // 선의 스타일 입니다
+                                fillColor: '#CFE7FF', // 채우기 색깔입니다
+                                fillOpacity: 0.7  // 채우기 불투명도 입니다   
+                            });
+                            // 지도에 원을 표시합니다 
+                            circle.setMap(map);
+
+                        });
+
+                    } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+
+                        var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),
+                            message = 'geolocation을 사용할수 없어요..'
+
+                        displayMarker(locPosition, message);
+                    }
+
+                    // 지도에 마커와 인포윈도우를 표시하는 함수입니다
+                    function displayMarker(locPosition, message) {
+
+                        // 마커를 생성합니다
+                        var marker = new kakao.maps.Marker({
+                            map: map,
+                            position: locPosition
+                        });
+
+                        geoMarker.push(marker);
+
+                        //var iwContent = message, // 인포윈도우에 표시할 내용
+                        //    iwRemoveable = true;
+
+                        /* 인포윈도우를 생성합니다
+                        var infowindow = new kakao.maps.InfoWindow({
+                            content: iwContent,
+                            removable: iwRemoveable
+                        });
+
+                        // 인포윈도우를 마커위에 표시합니다 
+                        infowindow.open(map, marker);*/
+                    }
+
+                }
+                // 배열에 추가된 마커들을 지도에 표시하거나 삭제하는 함수입니다
+                function GeosetMarkers(map) {
+                    for (var i = 0; i < geoMarker.length; i++) {
+                        geoMarker[i].setMap(map);
+                    }
+                }
+                // "마커 감추기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에서 삭제하는 함수입니다
+                function GeohideMarkers() {
+                    GeosetMarkers(null);
+                    circle.setMap(null);
+                }
+
+                // 지도에 표시된 마커 객체를 가지고 있을 배열입니다
+                var markers = [];
+                // 마커 클러스터러를 생성합니다 
+                var clusterer = new kakao.maps.MarkerClusterer({
+                    map: map, // 마커들을 클러스터로 관리하고 표시할 지도 객체 
+                    averageCenter: true, // 클러스터에 포함된 마커들의 평균 위치를 클러스터 마커 위치로 설정 
+                    minLevel: 10 // 클러스터 할 최소 지도 레벨 
+                })
+                var 데이터 = [
+                    [35.1370848, 129.0928946, '<div style="padding: 5px">대연초등학교</div>'],
+                    [35.1365243, 129.0843734, '<div style="padding: 5px">부산광역시남구청대강당</div>'],
+                    [35.1308035, 129.1081982, '<div style="padding: 5px">용문초등학교</div>'],
+                    [35.1227085, 129.1089498, '<div style="padding: 5px">용호초등학교</div>'],
+                    [35.1287502, 129.081255, '<div style="padding: 5px">성지고등학교</div>'],
+                    [35.1331989, 129.073643, '<div style="padding: 5px">대양전자통신고등학교</div>'],
+                    [35.1444702, 129.0872224, '<div style="padding: 5px">동천고등학교</div>'],
+                    [35.129311, 129.0780009, '<div style="padding: 5px">신연초등학교</div>'],
+                    [35.1256998, 129.0759485, '<div style="padding: 5px">우암초등학교</div>'],
+                    [35.1453363, 129.072865, '<div style="padding: 5px">문현초등학교</div>']
+                ];
+
+                for (var i = 0; i < 데이터.length; i++) {
+                    // 마커를 생성합니다
+                    var marker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(데이터[i][0], 데이터[i][1])
+                    });
+
+                    //인포윈도우 생성합니다
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: 데이터[i][2] // 인포윈도우에 표시할 내용
+                    });
+                    kakao.maps.event.addListener(marker, 'mouseover', makeOverListener(map, marker, infowindow));
+                    kakao.maps.event.addListener(marker, 'mouseout', makeOutListener(infowindow));
+                    markers.push(marker);
+                }
+
+                // 클러스터러에 마커들을 추가합니다
+                clusterer.addMarkers(markers);
+
+                // 인포윈도우를 표시하는 클로저를 만드는 함수입니다 
+                function makeOverListener(map, marker, infowindow) {
+                    return function () {
+                        infowindow.open(map, marker);
+                    };
+                }
+
+                // 인포윈도우를 닫는 클로저를 만드는 함수입니다 
+                function makeOutListener(infowindow) {
+                    return function () {
+                        infowindow.close();
+                    };
+                }
+
+                // 배열에 추가된 마커들을 지도에 표시하거나 삭제하는 함수입니다
+                function setMarkers(map) {
+                    for (var i = 0; i < markers.length; i++) {
+                        markers[i].setMap(map);
+                    }
+                }
+
+                // "마커 보이기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에 표시하는 함수입니다
+                function showMarkers() {
+                    setMarkers(map);
+                    clusterer.addMarkers(markers);
+                }
+
+                // "마커 감추기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에서 삭제하는 함수입니다
+                function hideMarkers() {
+                    setMarkers(null);
+                    clusterer.clear();
+                }
+
+                //대피소 체크박스 체크, 해제
+                function DaePicheck(box) {
+                    if (box.checked == true)
+                        showMarkers();
+                    else
+                        hideMarkers();
+                }
+                //주차장 체크박스 체크, 해제
+                function Parkingcheck(box) {
+                    if (box.checked == true)
+                        Parking_showMarkers();
+                    else
+                        Parking_hideMarkers();
+                }
+
+                hideMarkers(); // 처음 지우기
+
+                //주차장 마커 표시
+                // 지도에 표시된 마커 객체를 가지고 있을 배열입니다
+                var ParkingMarkers = [];
+                // 마커 클러스터러를 생성합니다 
+                var clusterer = new kakao.maps.MarkerClusterer({
+                    map: map, // 마커들을 클러스터로 관리하고 표시할 지도 객체 
+                    averageCenter: true, // 클러스터에 포함된 마커들의 평균 위치를 클러스터 마커 위치로 설정 
+                    minLevel: 10 // 클러스터 할 최소 지도 레벨 
+                })
+                var parklocation = {
+                    data: [
+                        {
+                            "주차장명": "엄궁초등학교지하주차장",
+                            "위도": 128.974,
+                            "경도": 35.129
+                        },
+                        {
+                            "주차장명": "모라1동행정복지센터주변",
+                            "위도": 128.992,
+                            "경도": 35.191
+                        },
+                        {
+                            "주차장명": "학장동행정복지센터",
+                            "위도": 128.987,
+                            "경도": 35.144
+                        },
+                        {
+                            "주차장명": "삼락재첩거리주변",
+                            "위도": 128.986,
+                            "경도": 35.193
+                        },
+                        {
+                            "주차장명": "감전중천주변",
+                            "위도": 128.977,
+                            "경도": 35.154
+                        },
+                        {
+                            "주차장명": "동영공업주변",
+                            "위도": 128.975,
+                            "경도": 35.141
+                        },
+                        {
+                            "주차장명": "위생처리장주변",
+                            "위도": 128.969,
+                            "경도": 35.137
+                        },
+                        {
+                            "주차장명": "학장지구대주변",
+                            "위도": 128.983,
+                            "경도": 35.143
+                        },
+                        {
+                            "주차장명": "감전중고차시장주변",
+                            "위도": 128.989,
+                            "경도": 35.151
+                        },
+                        {
+                            "주차장명": "해표사료주변",
+                            "위도": 128.976,
+                            "경도": 35.157
+                        },
+                        {
+                            "주차장명": "동서고가도로밑주변",
+                            "위도": 129.003,
+                            "경도": 35.152
+                        },
+                        {
+                            "주차장명": "주례역주변 복개",
+                            "위도": 128.967,
+                            "경도": 35.127
+                        },
+                        {
+                            "주차장명": "동주윗길3주변",
+                            "위도": 129.035,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "엄궁목장길주변",
+                            "위도": 129.127,
+                            "경도": 35.155
+                        },
+                        {
+                            "주차장명": "망미동(번영로하부)공영주차장",
+                            "위도": 129.116,
+                            "경도": 35.155
+                        },
+                        {
+                            "주차장명": "광안동(번영로하부)공영주차장",
+                            "위도": 129.111,
+                            "경도": 35.138
+                        },
+                        {
+                            "주차장명": "망미동 노외공영주차장",
+                            "위도": 128.998,
+                            "경도": 35.15
+                        },
+                        {
+                            "주차장명": "남천1동공영주차장",
+                            "위도": 128.991,
+                            "경도": 35.193
+                        },
+                        {
+                            "주차장명": "동신운수옆복개공영주차장",
+                            "위도": 128.995,
+                            "경도": 35.145
+                        },
+                        {
+                            "주차장명": "곡상골공원주거지주차장",
+                            "위도": 128.983,
+                            "경도": 35.143
+                        },
+                        {
+                            "주차장명": "학장천공영주차장",
+                            "위도": 128.979,
+                            "경도": 35.147
+                        },
+                        {
+                            "주차장명": "삼락재첩거리주변",
+                            "위도": 128.99,
+                            "경도": 35.188
+                        },
+                        {
+                            "주차장명": "현대골드빌라주변",
+                            "위도": 128.993,
+                            "경도": 35.19
+                        },
+                        {
+                            "주차장명": "삼락천로 공영주차장",
+                            "위도": 128.989,
+                            "경도": 35.154
+                        },
+                        {
+                            "주차장명": "안각1길주거지주차장",
+                            "위도": 128.99,
+                            "경도": 35.175
+                        },
+                        {
+                            "주차장명": "감전역역세권공영주차장",
+                            "위도": 128.988,
+                            "경도": 35.156
+                        },
+                        {
+                            "주차장명": "덕포백양공원공영주차장",
+                            "위도": 129.004,
+                            "경도": 35.15
+                        },
+                        {
+                            "주차장명": "늘푸른사상",
+                            "위도": 129,
+                            "경도": 35.151
+                        },
+                        {
+                            "주차장명": "감전시장주변",
+                            "위도": 129.004,
+                            "경도": 35.154
+                        },
+                        {
+                            "주차장명": "주례역공영주차장",
+                            "위도": 128.985,
+                            "경도": 35.168
+                        },
+                        {
+                            "주차장명": "양지2공원주변",
+                            "위도": 128.992,
+                            "경도": 35.147
+                        },
+                        {
+                            "주차장명": "사상초등학교주변",
+                            "위도": 128.98,
+                            "경도": 35.162
+                        },
+                        {
+                            "주차장명": "녹산동1324-3",
+                            "위도": 129.094,
+                            "경도": 35.172
+                        },
+                        {
+                            "주차장명": "유통단지1로40번길 공영주차장",
+                            "위도": 129.073,
+                            "경도": 35.183
+                        },
+                        {
+                            "주차장명": "범방동1853-1",
+                            "위도": 129.097,
+                            "경도": 35.186
+                        },
+                        {
+                            "주차장명": "고분로 제1공동주차장",
+                            "위도": 129.11,
+                            "경도": 35.182
+                        },
+                        {
+                            "주차장명": "연산3동금련 공영주차장",
+                            "위도": 129.095,
+                            "경도": 35.174
+                        },
+                        {
+                            "주차장명": "고분로 제2공동주차장",
+                            "위도": 129.084,
+                            "경도": 35.176
+                        },
+                        {
+                            "주차장명": "토현공동 주거지전용주차장",
+                            "위도": 129.078,
+                            "경도": 35.185
+                        },
+                        {
+                            "주차장명": "연미공영노외주차장",
+                            "위도": 129.1,
+                            "경도": 35.187
+                        },
+                        {
+                            "주차장명": "새싹공동주차장",
+                            "위도": 129.067,
+                            "경도": 35.179
+                        },
+                        {
+                            "주차장명": "연천공동주차장",
+                            "위도": 129.109,
+                            "경도": 35.182
+                        },
+                        {
+                            "주차장명": "과정공영주차장",
+                            "위도": 129.08,
+                            "경도": 35.182
+                        },
+                        {
+                            "주차장명": "시청로공영주차장",
+                            "위도": 129.079,
+                            "경도": 35.198
+                        },
+                        {
+                            "주차장명": "연일공동주차장",
+                            "위도": 129.08,
+                            "경도": 35.189
+                        },
+                        {
+                            "주차장명": "황금로 공영주차장",
+                            "위도": 129.11,
+                            "경도": 35.185
+                        },
+                        {
+                            "주차장명": "태경선샤인아파트앞 공영주차장",
+                            "위도": 129.083,
+                            "경도": 35.177
+                        },
+                        {
+                            "주차장명": "시티타워뒤 공영주차장",
+                            "위도": 129.082,
+                            "경도": 35.179
+                        },
+                        {
+                            "주차장명": "연잎공동 주거지전용주차장",
+                            "위도": 129.106,
+                            "경도": 35.189
+                        },
+                        {
+                            "주차장명": "신리공동 주거지전용주차장",
+                            "위도": 129.072,
+                            "경도": 35.181
+                        },
+                        {
+                            "주차장명": "연제중앙천복개로 공영주차장",
+                            "위도": 129.084,
+                            "경도": 35.184
+                        },
+                        {
+                            "주차장명": "연일시장 공동주차장",
+                            "위도": 129.133,
+                            "경도": 35.157
+                        },
+                        {
+                            "주차장명": "수변공원 공영주차장",
+                            "위도": 129.104,
+                            "경도": 35.216
+                        },
+                        {
+                            "주차장명": "민락수변공원 공영주차장",
+                            "위도": 129.111,
+                            "경도": 35.22
+                        },
+                        {
+                            "주차장명": "민락해변공원공영주차장",
+                            "위도": 129.09,
+                            "경도": 35.26
+                        },
+                        {
+                            "주차장명": "서3동제4공영주차장",
+                            "위도": 129.089,
+                            "경도": 35.248
+                        },
+                        {
+                            "주차장명": "금사동제2공영주차장",
+                            "위도": 129.108,
+                            "경도": 35.22
+                        },
+                        {
+                            "주차장명": "서3동제5공영주차장",
+                            "위도": 129.089,
+                            "경도": 35.253
+                        },
+                        {
+                            "주차장명": "서동미로시장 공영주차장",
+                            "위도": 129.085,
+                            "경도": 35.272
+                        },
+                        {
+                            "주차장명": "도시철도 구서역",
+                            "위도": 129.118,
+                            "경도": 35.226
+                        },
+                        {
+                            "주차장명": "두실공영주차장",
+                            "위도": 129.091,
+                            "경도": 35.24
+                        },
+                        {
+                            "주차장명": "회동고가 밑",
+                            "위도": 129.104,
+                            "경도": 35.217
+                        },
+                        {
+                            "주차장명": "부곡3동 SK후문 노상공영주차장",
+                            "위도": 129.103,
+                            "경도": 35.212
+                        },
+                        {
+                            "주차장명": "금사고가밑",
+                            "위도": 129.094,
+                            "경도": 35.235
+                        },
+                        {
+                            "주차장명": "서3동제2공영주차장",
+                            "위도": 129.106,
+                            "경도": 35.219
+                        },
+                        {
+                            "주차장명": "평화로 소규모공동주차장",
+                            "위도": 129.095,
+                            "경도": 35.216
+                        },
+                        {
+                            "주차장명": "기찰1로소규모공동주차장",
+                            "위도": 129.094,
+                            "경도": 35.219
+                        },
+                        {
+                            "주차장명": "서3동 제1공영주차장",
+                            "위도": 129.09,
+                            "경도": 35.26
+                        },
+                        {
+                            "주차장명": "서1동제3공영주차장",
+                            "위도": 129.093,
+                            "경도": 35.257
+                        },
+                        {
+                            "주차장명": "부곡4동공영주차장",
+                            "위도": 129.092,
+                            "경도": 35.228
+                        },
+                        {
+                            "주차장명": "서1동제1공영주차장",
+                            "위도": 129.113,
+                            "경도": 35.222
+                        },
+                        {
+                            "주차장명": "안뜰로소규모공동주차장",
+                            "위도": 129.087,
+                            "경도": 35.272
+                        },
+                        {
+                            "주차장명": "부곡2동공영주차장",
+                            "위도": 129.102,
+                            "경도": 35.248
+                        },
+                        {
+                            "주차장명": "금사동 소규모공동주차장",
+                            "위도": 129.091,
+                            "경도": 35.245
+                        },
+                        {
+                            "주차장명": "남산동꽃님공영주차장",
+                            "위도": 129.117,
+                            "경도": 35.226
+                        },
+                        {
+                            "주차장명": "도시철도 장전역",
+                            "위도": 129.086,
+                            "경도": 35.277
+                        },
+                        {
+                            "주차장명": "도시철도구서역",
+                            "위도": 129.089,
+                            "경도": 35.272
+                        },
+                        {
+                            "주차장명": "명지오션시티 중앙상가로 공영주차장",
+                            "위도": 128.84,
+                            "경도": 35.084
+                        },
+                        {
+                            "주차장명": "하단1동 유수지 공영주차장",
+                            "위도": 128.978,
+                            "경도": 35.091
+                        },
+                        {
+                            "주차장명": "신평골목시장 공영주차장",
+                            "위도": 128.992,
+                            "경도": 35.097
+                        },
+                        {
+                            "주차장명": "감천1동 공영주차장",
+                            "위도": 128.967,
+                            "경도": 35.082
+                        },
+                        {
+                            "주차장명": "에코팩토리 존 노상공영주차장",
+                            "위도": 128.968,
+                            "경도": 35.047
+                        },
+                        {
+                            "주차장명": "장림골목시장 공영주차장",
+                            "위도": 128.961,
+                            "경도": 35.081
+                        },
+                        {
+                            "주차장명": "도시철도 하단역 공영주차장",
+                            "위도": 128.981,
+                            "경도": 35.059
+                        },
+                        {
+                            "주차장명": "괴정2동 대성아파트주변",
+                            "위도": 129.084,
+                            "경도": 35.238
+                        },
+                        {
+                            "주차장명": "괴정3동 삼성연립앞 소규모",
+                            "위도": 129.093,
+                            "경도": 35.225
+                        },
+                        {
+                            "주차장명": "다대2동공영주차장",
+                            "위도": 129.093,
+                            "경도": 35.231
+                        },
+                        {
+                            "주차장명": "장전1동공영주차장",
+                            "위도": 129.088,
+                            "경도": 35.233
+                        },
+                        {
+                            "주차장명": "가마실로소규모공동주차장",
+                            "위도": 129.095,
+                            "경도": 35.247
+                        },
+                        {
+                            "주차장명": "금양13로 소규모공동주차장",
+                            "위도": 129.094,
+                            "경도": 35.219
+                        },
+                        {
+                            "주차장명": "도시철도 부산대역(북측)",
+                            "위도": 129.089,
+                            "경도": 35.272
+                        },
+                        {
+                            "주차장명": "만남의광장공영주차장",
+                            "위도": 129.089,
+                            "경도": 35.228
+                        },
+                        {
+                            "주차장명": "부곡4동삼차로공영주차장",
+                            "위도": 129.097,
+                            "경도": 35.219
+                        },
+                        {
+                            "주차장명": "온천천복개도로(옛냇길)노상공영",
+                            "위도": 129.092,
+                            "경도": 35.253
+                        },
+                        {
+                            "주차장명": "도시철도 부산대역(남측)",
+                            "위도": 129.093,
+                            "경도": 35.265
+                        },
+                        {
+                            "주차장명": "서1동제2공영주차장",
+                            "위도": 129.109,
+                            "경도": 35.221
+                        },
+                        {
+                            "주차장명": "서2동공영주차장",
+                            "위도": 129.08,
+                            "경도": 35.214
+                        },
+                        {
+                            "주차장명": "도시철도 남산역",
+                            "위도": 129.095,
+                            "경도": 35.249
+                        },
+                        {
+                            "주차장명": "금사동 제1 공영주차장",
+                            "위도": 129.099,
+                            "경도": 35.215
+                        },
+                        {
+                            "주차장명": "온천장북측공영주차장",
+                            "위도": 129.074,
+                            "경도": 35.28
+                        },
+                        {
+                            "주차장명": "구서IC 화물",
+                            "위도": 129.102,
+                            "경도": 35.217
+                        },
+                        {
+                            "주차장명": "장림동 동원로얄듀크아파트 노상공영주차장",
+                            "위도": 128.973,
+                            "경도": 35.089
+                        },
+                        {
+                            "주차장명": "신평2동노상복합공영주차장",
+                            "위도": 128.976,
+                            "경도": 35.093
+                        },
+                        {
+                            "주차장명": "장림2동 노상공영주차장",
+                            "위도": 128.96,
+                            "경도": 35.094
+                        },
+                        {
+                            "주차장명": "신평장림산업단지 공영주차장",
+                            "위도": 128.999,
+                            "경도": 35.049
+                        },
+                        {
+                            "주차장명": "신평1동 천수내과주변 소규모 공동주차장",
+                            "위도": 129,
+                            "경도": 35.09
+                        },
+                        {
+                            "주차장명": "지하철신평역앞",
+                            "위도": 128.977,
+                            "경도": 35.101
+                        },
+                        {
+                            "주차장명": "방파제입구",
+                            "위도": 128.968,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "감천1동 부일외고진입로변",
+                            "위도": 129.01,
+                            "경도": 35.085
+                        },
+                        {
+                            "주차장명": "괴정천복개로(당리동)",
+                            "위도": 129.011,
+                            "경도": 35.093
+                        },
+                        {
+                            "주차장명": "괴정천복개로(하단동)",
+                            "위도": 128.976,
+                            "경도": 35.105
+                        },
+                        {
+                            "주차장명": "감천1동천마산산복도로",
+                            "위도": 128.976,
+                            "경도": 35.091
+                        },
+                        {
+                            "주차장명": "감천2동천마산산복도로",
+                            "위도": 129.005,
+                            "경도": 35.107
+                        },
+                        {
+                            "주차장명": "당리동 소규모공동",
+                            "위도": 129.009,
+                            "경도": 35.096
+                        },
+                        {
+                            "주차장명": "신평1동 백남탕옆 소규모공동주차장",
+                            "위도": 128.979,
+                            "경도": 35.065
+                        },
+                        {
+                            "주차장명": "산수탕옆 소규모공동주차장",
+                            "위도": 128.971,
+                            "경도": 35.104
+                        },
+                        {
+                            "주차장명": "신평골목시장 노외 공영주차장",
+                            "위도": 128.968,
+                            "경도": 35.083
+                        },
+                        {
+                            "주차장명": "사릿골 공영주차장",
+                            "위도": 128.975,
+                            "경도": 35.104
+                        },
+                        {
+                            "주차장명": "장림 노외 공영주차장",
+                            "위도": 128.945,
+                            "경도": 35.109
+                        },
+                        {
+                            "주차장명": "화천아파트뒤",
+                            "위도": 128.968,
+                            "경도": 35.047
+                        },
+                        {
+                            "주차장명": "사하구청앞",
+                            "위도": 129.011,
+                            "경도": 35.097
+                        },
+                        {
+                            "주차장명": "(20구역)소규모(덕성노인대학뒤)",
+                            "위도": 129.01,
+                            "경도": 35.215
+                        },
+                        {
+                            "주차장명": "덕천3동 공영주차장",
+                            "위도": 129.003,
+                            "경도": 35.21
+                        },
+                        {
+                            "주차장명": "(18구역)소규모공동주차장",
+                            "위도": 129.038,
+                            "경도": 35.209
+                        },
+                        {
+                            "주차장명": "덕천 공영주차장",
+                            "위도": 129.041,
+                            "경도": 35.214
+                        },
+                        {
+                            "주차장명": "대리천 공영주차장",
+                            "위도": 128.996,
+                            "경도": 35.203
+                        },
+                        {
+                            "주차장명": "신만덕사거리 공영주차장",
+                            "위도": 129.008,
+                            "경도": 35.204
+                        },
+                        {
+                            "주차장명": "문현교통광장대상지 주거지전용",
+                            "위도": 129.081,
+                            "경도": 35.11
+                        },
+                        {
+                            "주차장명": "수영로69번길 공영주차장",
+                            "위도": 129.01,
+                            "경도": 35.205
+                        },
+                        {
+                            "주차장명": "만덕2동 886-23(21구역)",
+                            "위도": 129.015,
+                            "경도": 35.211
+                        },
+                        {
+                            "주차장명": "만덕2동 348(22구역)",
+                            "위도": 129.006,
+                            "경도": 35.213
+                        },
+                        {
+                            "주차장명": "만덕1동",
+                            "위도": 129.017,
+                            "경도": 35.238
+                        },
+                        {
+                            "주차장명": "국철 화명역 공영주차장",
+                            "위도": 129.041,
+                            "경도": 35.214
+                        },
+                        {
+                            "주차장명": "덕천2동 공영주차장",
+                            "위도": 129.03,
+                            "경도": 35.211
+                        },
+                        {
+                            "주차장명": "화명 공영주차장",
+                            "위도": 128.989,
+                            "경도": 35.197
+                        },
+                        {
+                            "주차장명": "삼성 공영주차장",
+                            "위도": 128.996,
+                            "경도": 35.196
+                        },
+                        {
+                            "주차장명": "구포시장고객전용공영주차장",
+                            "위도": 128.989,
+                            "경도": 35.197
+                        },
+                        {
+                            "주차장명": "포천초교공영주차장",
+                            "위도": 129.018,
+                            "경도": 35.269
+                        },
+                        {
+                            "주차장명": "만덕3동공영주차장",
+                            "위도": 129.013,
+                            "경도": 35.196
+                        },
+                        {
+                            "주차장명": "낙동 공영주차장",
+                            "위도": 128.995,
+                            "경도": 35.204
+                        },
+                        {
+                            "주차장명": "구포3동 공영주차장",
+                            "위도": 129.054,
+                            "경도": 35.153
+                        },
+                        {
+                            "주차장명": "(7구역)소규모공동",
+                            "위도": 129.062,
+                            "경도": 35.158
+                        },
+                        {
+                            "주차장명": "부전복개도로",
+                            "위도": 129.08,
+                            "경도": 35.214
+                        },
+                        {
+                            "주차장명": "적십자회관",
+                            "위도": 129.079,
+                            "경도": 35.207
+                        },
+                        {
+                            "주차장명": "평화시장",
+                            "위도": 129.081,
+                            "경도": 35.214
+                        },
+                        {
+                            "주차장명": "도시철도 온천장역",
+                            "위도": 129.083,
+                            "경도": 35.201
+                        },
+                        {
+                            "주차장명": "도시철도 동래역",
+                            "위도": 129.103,
+                            "경도": 35.201
+                        },
+                        {
+                            "주차장명": "수안동 주차빌딩",
+                            "위도": 129.059,
+                            "경도": 35.204
+                        },
+                        {
+                            "주차장명": "안락2동 소규모 공영주차장",
+                            "위도": 129.077,
+                            "경도": 35.223
+                        },
+                        {
+                            "주차장명": "여고로 소규모공영주차장",
+                            "위도": 129.087,
+                            "경도": 35.196
+                        },
+                        {
+                            "주차장명": "달북 소규모공영주차장",
+                            "위도": 129.089,
+                            "경도": 35.211
+                        },
+                        {
+                            "주차장명": "금강공원공영주차장",
+                            "위도": 129.086,
+                            "경도": 35.204
+                        },
+                        {
+                            "주차장명": "새동래3차아파트앞",
+                            "위도": 129.098,
+                            "경도": 35.211
+                        },
+                        {
+                            "주차장명": "사적공원 공영주차장",
+                            "위도": 129.069,
+                            "경도": 35.2
+                        },
+                        {
+                            "주차장명": "동명로157번길 공영주차장",
+                            "위도": 129.108,
+                            "경도": 35.123
+                        },
+                        {
+                            "주차장명": "용호로232번길 공영주차장",
+                            "위도": 129.077,
+                            "경도": 35.146
+                        },
+                        {
+                            "주차장명": "감만동 홍곡로 공영주차장",
+                            "위도": 129.105,
+                            "경도": 35.129
+                        },
+                        {
+                            "주차장명": "제2문현교통광장 대상지",
+                            "위도": 129.045,
+                            "경도": 35.154
+                        },
+                        {
+                            "주차장명": "백양순환로 시간제 노상주차장",
+                            "위도": 129.048,
+                            "경도": 35.152
+                        },
+                        {
+                            "주차장명": "테마공원로 시간제 노상주차장",
+                            "위도": 129.041,
+                            "경도": 35.169
+                        },
+                        {
+                            "주차장명": "범천4동 소규모공동주차장",
+                            "위도": 129.023,
+                            "경도": 35.163
+                        },
+                        {
+                            "주차장명": "금호천지맨션 뒤",
+                            "위도": 129.047,
+                            "경도": 35.158
+                        },
+                        {
+                            "주차장명": "큰별유치원 뒤",
+                            "위도": 129.065,
+                            "경도": 35.161
+                        },
+                        {
+                            "주차장명": "범천동신암로",
+                            "위도": 129.058,
+                            "경도": 35.156
+                        },
+                        {
+                            "주차장명": "부산도시공사 옆 공영주차장",
+                            "위도": 129.029,
+                            "경도": 35.15
+                        },
+                        {
+                            "주차장명": "골드테마거리 공영주차장",
+                            "위도": 129.019,
+                            "경도": 35.146
+                        },
+                        {
+                            "주차장명": "개성동천 공영주차장",
+                            "위도": 129.065,
+                            "경도": 35.154
+                        },
+                        {
+                            "주차장명": "주례초등학교공영노외주차장",
+                            "위도": 129.062,
+                            "경도": 35.142
+                        },
+                        {
+                            "주차장명": "청학하나 노외 공영주차장",
+                            "위도": 129.057,
+                            "경도": 35.091
+                        },
+                        {
+                            "주차장명": "신선하나",
+                            "위도": 129.062,
+                            "경도": 35.089
+                        },
+                        {
+                            "주차장명": "청학2동 노외공영주차장",
+                            "위도": 129.036,
+                            "경도": 35.084
+                        },
+                        {
+                            "주차장명": "남항방파제앞",
+                            "위도": 129.037,
+                            "경도": 35.088
+                        },
+                        {
+                            "주차장명": "동삼2동3",
+                            "위도": 129.071,
+                            "경도": 35.092
+                        },
+                        {
+                            "주차장명": "봉래시장 공영주차장",
+                            "위도": 129.035,
+                            "경도": 35.091
+                        },
+                        {
+                            "주차장명": "청학시장 공영주차장",
+                            "위도": 129.046,
+                            "경도": 35.095
+                        },
+                        {
+                            "주차장명": "해양로변",
+                            "위도": 129.039,
+                            "경도": 35.081
+                        },
+                        {
+                            "주차장명": "봉래물양장",
+                            "위도": 129.04,
+                            "경도": 35.094
+                        },
+                        {
+                            "주차장명": "대교초등학교앞",
+                            "위도": 129.077,
+                            "경도": 35.086
+                        },
+                        {
+                            "주차장명": "서면시장 앞",
+                            "위도": 129.062,
+                            "경도": 35.164
+                        },
+                        {
+                            "주차장명": "골드테마거리",
+                            "위도": 129.062,
+                            "경도": 35.148
+                        },
+                        {
+                            "주차장명": "부전역공영",
+                            "위도": 129.055,
+                            "경도": 35.18
+                        },
+                        {
+                            "주차장명": "춘해병원옆",
+                            "위도": 129.078,
+                            "경도": 35.174
+                        },
+                        {
+                            "주차장명": "부산도시공사옆",
+                            "위도": 129.065,
+                            "경도": 35.161
+                        },
+                        {
+                            "주차장명": "초읍새싹길 주거지전용주차장",
+                            "위도": 129.034,
+                            "경도": 35.169
+                        },
+                        {
+                            "주차장명": "광명3로 주거지전용주차장",
+                            "위도": 129.021,
+                            "경도": 35.148
+                        },
+                        {
+                            "주차장명": "복지1로 주거지전용주차장",
+                            "위도": 129.063,
+                            "경도": 5.139
+                        },
+                        {
+                            "주차장명": "조방로10번길제2노상공영주차장",
+                            "위도": 129.038,
+                            "경도": 35.128
+                        },
+                        {
+                            "주차장명": "초량2동 제2공영주차장",
+                            "위도": 129.036,
+                            "경도": 35.122
+                        },
+                        {
+                            "주차장명": "화신칼라 앞 공영주차장",
+                            "위도": 129.064,
+                            "경도": 35.141
+                        },
+                        {
+                            "주차장명": "범일초등학교 지하 공영",
+                            "위도": 129.065,
+                            "경도": 35.14
+                        },
+                        {
+                            "주차장명": "부산일보별관(사용료산정용)",
+                            "위도": 129.063,
+                            "경도": 35.137
+                        },
+                        {
+                            "주차장명": "조방로34번길 제2노상공영주차장",
+                            "위도": 129.06,
+                            "경도": 35.136
+                        },
+                        {
+                            "주차장명": "조방로16번길제2노상",
+                            "위도": 129.054,
+                            "경도": 35.131
+                        },
+                        {
+                            "주차장명": "자성로 제1노상공영주차장",
+                            "위도": 129.057,
+                            "경도": 35.13
+                        },
+                        {
+                            "주차장명": "자성로75번길제1노상",
+                            "위도": 129.05,
+                            "경도": 35.131
+                        },
+                        {
+                            "주차장명": "성남로49번길 제1노상",
+                            "위도": 129.047,
+                            "경도": 35.129
+                        },
+                        {
+                            "주차장명": "중앙대로399번길 제1노상공영주차장",
+                            "위도": 129.043,
+                            "경도": 35.119
+                        },
+                        {
+                            "주차장명": "진성로9번길 제1노상(구, 우리아비바생명옆)",
+                            "위도": 129.046,
+                            "경도": 35.125
+                        },
+                        {
+                            "주차장명": "중앙대로236번길 제2노상공영주차장",
+                            "위도": 129.044,
+                            "경도": 35.12
+                        },
+                        {
+                            "주차장명": "중앙대로248번길제3노상",
+                            "위도": 129.051,
+                            "경도": 35.133
+                        },
+                        {
+                            "주차장명": "중앙대로320번길제3노상공영",
+                            "위도": 129.034,
+                            "경도": 35.118
+                        },
+                        {
+                            "주차장명": "중앙대로260번길 제1노상공영주차장",
+                            "위도": 129.046,
+                            "경도": 35.137
+                        },
+                        {
+                            "주차장명": "좌천동제1공영",
+                            "위도": 129.039,
+                            "경도": 35.131
+                        },
+                        {
+                            "주차장명": "초량2동공영",
+                            "위도": 129.052,
+                            "경도": 35.133
+                        },
+                        {
+                            "주차장명": "수정5동공영",
+                            "위도": 129.055,
+                            "경도": 35.129
+                        },
+                        {
+                            "주차장명": "수정2동공영",
+                            "위도": 129.041,
+                            "경도": 35.133
+                        },
+                        {
+                            "주차장명": "성남로 제1노외공영주차장",
+                            "위도": 129.041,
+                            "경도": 35.094
+                        },
+                        {
+                            "주차장명": "수정산(동여중)공영",
+                            "위도": 129.071,
+                            "경도": 35.09
+                        },
+                        {
+                            "주차장명": "남항시장 노외 공영주차장",
+                            "위도": 129.036,
+                            "경도": 35.09
+                        },
+                        {
+                            "주차장명": "부산대교 밑",
+                            "위도": 129.054,
+                            "경도": 35.073
+                        },
+                        {
+                            "주차장명": "토토볼링장앞",
+                            "위도": 129.021,
+                            "경도": 35.091
+                        },
+                        {
+                            "주차장명": "하늘전망대앞",
+                            "위도": 129.012,
+                            "경도": 35.118
+                        },
+                        {
+                            "주차장명": "청학초등학교",
+                            "위도": 129.039,
+                            "경도": 35.125
+                        },
+                        {
+                            "주차장명": "해돋이공영주차장",
+                            "위도": 129.042,
+                            "경도": 35.13
+                        },
+                        {
+                            "주차장명": "서대신4동제2노상공영주차장",
+                            "위도": 129.046,
+                            "경도": 35.135
+                        },
+                        {
+                            "주차장명": "수정1동공영",
+                            "위도": 129.04,
+                            "경도": 35.113
+                        },
+                        {
+                            "주차장명": "수정2동제2공영",
+                            "위도": 129.052,
+                            "경도": 35.141
+                        },
+                        {
+                            "주차장명": "좌천동제2공영주차장",
+                            "위도": 129.04,
+                            "경도": 35.112
+                        },
+                        {
+                            "주차장명": "범일1동제2공영",
+                            "위도": 129.047,
+                            "경도": 35.126
+                        },
+                        {
+                            "주차장명": "중앙대로180번길 제3노상공영주차장",
+                            "위도": 129.038,
+                            "경도": 35.122
+                        },
+                        {
+                            "주차장명": "중앙대로332번길 제3노상공영주차장",
+                            "위도": 129.046,
+                            "경도": 35.125
+                        },
+                        {
+                            "주차장명": "중앙대로332번길 제2노상",
+                            "위도": 129.034,
+                            "경도": 35.119
+                        },
+                        {
+                            "주차장명": "구봉로제1노상",
+                            "위도": 129.064,
+                            "경도": 35.141
+                        },
+                        {
+                            "주차장명": "중앙대로320번길제2노상공영",
+                            "위도": 129.062,
+                            "경도": 35.14
+                        },
+                        {
+                            "주차장명": "초량6동공영",
+                            "위도": 129.063,
+                            "경도": 35.138
+                        },
+                        {
+                            "주차장명": "행복예식장옆",
+                            "위도": 129.039,
+                            "경도": 35.121
+                        },
+                        {
+                            "주차장명": "자성공원로 제1노상공영주차장",
+                            "위도": 129.061,
+                            "경도": 35.141
+                        },
+                        {
+                            "주차장명": "자성로140번길 제1노상공영주차장",
+                            "위도": 129.05,
+                            "경도": 35.139
+                        },
+                        {
+                            "주차장명": "부산고등학교입구",
+                            "위도": 129.046,
+                            "경도": 35.131
+                        },
+                        {
+                            "주차장명": "자유시장 뒤",
+                            "위도": 129.063,
+                            "경도": 35.139
+                        },
+                        {
+                            "주차장명": "범일초등공영",
+                            "위도": 129.052,
+                            "경도": 35.133
+                        },
+                        {
+                            "주차장명": "수정초등공영",
+                            "위도": 129.045,
+                            "경도": 35.123
+                        },
+                        {
+                            "주차장명": "화신칼라 앞",
+                            "위도": 129.057,
+                            "경도": 35.131
+                        },
+                        {
+                            "주차장명": "고관로 제1공영주차장",
+                            "위도": 129.038,
+                            "경도": 35.133
+                        },
+                        {
+                            "주차장명": "중앙대로296번길제1노상(구,수정변전소)",
+                            "위도": 129.064,
+                            "경도": 35.138
+                        },
+                        {
+                            "주차장명": "범일5동 시간제주차장",
+                            "위도": 129.055,
+                            "경도": 35.136
+                        },
+                        {
+                            "주차장명": "동구체육공원",
+                            "위도": 129.048,
+                            "경도": 35.137
+                        },
+                        {
+                            "주차장명": "조방로10번길제1노상",
+                            "위도": 129.053,
+                            "경도": 35.139
+                        },
+                        {
+                            "주차장명": "가구거리 공영",
+                            "위도": 129.038,
+                            "경도": 35.115
+                        },
+                        {
+                            "주차장명": "성북공영주차장",
+                            "위도": 129.041,
+                            "경도": 35.127
+                        },
+                        {
+                            "주차장명": "범일1동공영주차장",
+                            "위도": 129.043,
+                            "경도": 35.118
+                        },
+                        {
+                            "주차장명": "차이나타운",
+                            "위도": 129.043,
+                            "경도": 35.117
+                        },
+                        {
+                            "주차장명": "수정4동공영",
+                            "위도": 129.063,
+                            "경도": 35.139
+                        },
+                        {
+                            "주차장명": "중앙대로236번길제3노상",
+                            "위도": 129.05,
+                            "경도": 35.143
+                        },
+                        {
+                            "주차장명": "조방로16번길 제1노상공영주차장",
+                            "위도": 129.016,
+                            "경도": 35.074
+                        },
+                        {
+                            "주차장명": "범일1동제3공영주차장",
+                            "위도": 129.02,
+                            "경도": 35.112
+                        },
+                        {
+                            "주차장명": "스카이웨이",
+                            "위도": 129.019,
+                            "경도": 35.093
+                        },
+                        {
+                            "주차장명": "송도노외공영주차장",
+                            "위도": 129.021,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "동대신2동제1노상공영주차장",
+                            "위도": 129.017,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "부민동제1노상공영주차장",
+                            "위도": 129.014,
+                            "경도": 35.099
+                        },
+                        {
+                            "주차장명": "충무동제7노상공영주차장",
+                            "위도": 129.021,
+                            "경도": 35.108
+                        },
+                        {
+                            "주차장명": "천해로노외공영주차장",
+                            "위도": 129.026,
+                            "경도": 35.085
+                        },
+                        {
+                            "주차장명": "암남동제5노상공영주차장",
+                            "위도": 129.026,
+                            "경도": 35.087
+                        },
+                        {
+                            "주차장명": "동대신1동제5노상공영주차장",
+                            "위도": 129.02,
+                            "경도": 35.101
+                        },
+                        {
+                            "주차장명": "천마2노외공영주차장",
+                            "위도": 129.019,
+                            "경도": 35.102
+                        },
+                        {
+                            "주차장명": "시약로노외공영주차장",
+                            "위도": 129.023,
+                            "경도": 35.076
+                        },
+                        {
+                            "주차장명": "동대신동 공영주차장",
+                            "위도": 129.024,
+                            "경도": 35.081
+                        },
+                        {
+                            "주차장명": "아미동제2노상공영",
+                            "위도": 129.02,
+                            "경도": 35.094
+                        },
+                        {
+                            "주차장명": "암남동제1노상공영주차장",
+                            "위도": 129.021,
+                            "경도": 35.098
+                        },
+                        {
+                            "주차장명": "암남동제10노상공영주차장",
+                            "위도": 129.007,
+                            "경도": 35.128
+                        },
+                        {
+                            "주차장명": "초장동제2노상공영주차장",
+                            "위도": 129.01,
+                            "경도": 35.13
+                        },
+                        {
+                            "주차장명": "충무동제5노상공영",
+                            "위도": 129.017,
+                            "경도": 35.072
+                        },
+                        {
+                            "주차장명": "서대신4동제3노상공영주차장",
+                            "위도": 129.016,
+                            "경도": 35.075
+                        },
+                        {
+                            "주차장명": "서대신4동제1노상공영주차장",
+                            "위도": 129.016,
+                            "경도": 35.074
+                        },
+                        {
+                            "주차장명": "암남동제8노상공영주차장",
+                            "위도": 129.013,
+                            "경도": 35.107
+                        },
+                        {
+                            "주차장명": "암남동제7노상공영주차장",
+                            "위도": 129.024,
+                            "경도": 35.114
+                        },
+                        {
+                            "주차장명": "암남동제2노상공영주차장",
+                            "위도": 129.025,
+                            "경도": 35.112
+                        },
+                        {
+                            "주차장명": "망양노외공영주차장",
+                            "위도": 129.038,
+                            "경도": 35.107
+                        },
+                        {
+                            "주차장명": "자갈치매립지",
+                            "위도": 129.0385428,
+                            "경도": 35.1113412
+                        },
+                        {
+                            "주차장명": "신창 노외공영주차장",
+                            "위도": 129.039,
+                            "경도": 35.111
+                        },
+                        {
+                            "주차장명": "중앙동 마린센터 노상공영주차장",
+                            "위도": 129.038,
+                            "경도": 35.098
+                        },
+                        {
+                            "주차장명": "건어물시장 노상공영주차장",
+                            "위도": 129.028,
+                            "경도": 35.101
+                        },
+                        {
+                            "주차장명": "남항 항만부지 공영주차장",
+                            "위도": 129.037,
+                            "경도": 35.109
+                        },
+                        {
+                            "주차장명": "롯데광복점 뒤 2번",
+                            "위도": 129.038,
+                            "경도": 35.108
+                        },
+                        {
+                            "주차장명": "국제시장로 1구간 노상공영주차장",
+                            "위도": 129.037,
+                            "경도": 35.104
+                        },
+                        {
+                            "주차장명": "중부소방서 뒤 노상공영주차장",
+                            "위도": 129.036,
+                            "경도": 35.106
+                        },
+                        {
+                            "주차장명": "중앙동 객화차담 밑 노상공영주차장",
+                            "위도": 129.024,
+                            "경도": 35.101
+                        },
+                        {
+                            "주차장명": "유창빌딩 앞 노상공영주차장",
+                            "위도": 129.037469,
+                            "경도": 35.0994154
+                        },
+                        {
+                            "주차장명": "부산우체국 뒤 노상공영주차장",
+                            "위도": 129.032,
+                            "경도": 35.111
+                        },
+                        {
+                            "주차장명": "보수 복개천 노상공영주차장",
+                            "위도": 129.01,
+                            "경도": 35.104
+                        },
+                        {
+                            "주차장명": "국제회관 옆 노상공영주차장",
+                            "위도": 129.021,
+                            "경도": 35.084
+                        },
+                        {
+                            "주차장명": "영주 노외공영주차장",
+                            "위도": 129.008,
+                            "경도": 35.127
+                        },
+                        {
+                            "주차장명": "아미까치노외공영주차장",
+                            "위도": 129.014,
+                            "경도": 35.118
+                        },
+                        {
+                            "주차장명": "남부민2동노외공영주차장",
+                            "위도": 129.026,
+                            "경도": 35.085
+                        },
+                        {
+                            "주차장명": "구덕꽃마을노외공영주차장",
+                            "위도": 129.025,
+                            "경도": 35.092
+                        },
+                        {
+                            "주차장명": "구덕노외공영주차장",
+                            "위도": 129.018,
+                            "경도": 35.106
+                        },
+                        {
+                            "주차장명": "남부민2동제3노상공영주차장",
+                            "위도": 129.016,
+                            "경도": 35.098
+                        },
+                        {
+                            "주차장명": "남부민1동제1노상공영",
+                            "위도": 129.018,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "부민동제4노상공영주차장",
+                            "위도": 129.033,
+                            "경도": 35.103
+                        },
+                        {
+                            "주차장명": "아미초등학교지하공영주차장",
+                            "위도": 129.0264822,
+                            "경도": 35.1
+                        },
+                        {
+                            "주차장명": "부민동제2노외공영주차장",
+                            "위도": 129.031,
+                            "경도": 35.101
+                        },
+                        {
+                            "주차장명": "용두산 노외공영주차장",
+                            "위도": 129.028,
+                            "경도": 35.104
+                        },
+                        {
+                            "주차장명": "보수 노외공영주차장",
+                            "위도": 129.036,
+                            "경도": 35.099
+                        },
+                        {
+                            "주차장명": "자갈치시장 앞 노상공영주차장",
+                            "위도": 129.035,
+                            "경도": 35.106
+                        }
+                    ]
+                }
+
+                for (var i = 0; i < parklocation.data.length; i++) {
+                    // 마커를 생성합니다
+                    var marker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(parklocation.data[i]["경도"], parklocation.data[i]["위도"])
+                    });
+
+                    //인포윈도우 생성합니다
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: parklocation.data[i]["주차장명"] // 인포윈도우에 표시할 내용
+                    });
+                    kakao.maps.event.addListener(marker, 'mouseover', Parking_makeOverListener(map, marker, infowindow));
+                    kakao.maps.event.addListener(marker, 'mouseout', Parking_makeOutListener(infowindow));
+                    ParkingMarkers.push(marker);
+                }
+
+                // 클러스터러에 마커들을 추가합니다
+                clusterer.addMarkers(ParkingMarkers);
+
+                // 인포윈도우를 표시하는 클로저를 만드는 함수입니다 
+                function Parking_makeOverListener(map, marker, infowindow) {
+                    return function () {
+                        infowindow.open(map, marker);
+                    };
+                }
+
+                // 인포윈도우를 닫는 클로저를 만드는 함수입니다 
+                function Parking_makeOutListener(infowindow) {
+                    return function () {
+                        infowindow.close();
+                    };
+                }
+
+                // 배열에 추가된 마커들을 지도에 표시하거나 삭제하는 함수입니다
+                function Parking_setMarkers(map) {
+                    for (var i = 0; i < ParkingMarkers.length; i++) {
+                        ParkingMarkers[i].setMap(map);
+                    }
+                }
+
+                // "마커 보이기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에 표시하는 함수입니다
+                function Parking_showMarkers() {
+                    Parking_setMarkers(map);
+                    clusterer.addMarkers(ParkingMarkers);
+                }
+
+                // "마커 감추기" 버튼을 클릭하면 호출되어 배열에 추가된 마커를 지도에서 삭제하는 함수입니다
+                function Parking_hideMarkers() {
+                    Parking_setMarkers(null);
+                    clusterer.clear();
+                }
+                //처음 지우기
+                Parking_hideMarkers();
+            </script>
+        </div>
+    </section>
+</body>
+
+</html>
